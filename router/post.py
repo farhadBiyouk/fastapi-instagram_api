@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from schemas.post import PostCreate, PostDisplay
 from schemas.user import UserDisplay
 from sqlalchemy.orm.session import Session
@@ -36,7 +36,7 @@ def create_post(request: PostCreate, db: Session = Depends(get_db)):
 
 
 @router.get('/', response_model=List[PostDisplay])
-def all_post(db: Session = Depends(get_db), current_user: UserDisplay = Depends(oath2.get_current_user)):
+def all_post(db: Session = Depends(get_db)):
 	posts = db.query(Post).all()
 	return posts
 
@@ -50,3 +50,17 @@ def upload_file(file: UploadFile = File(...)):
 		shutil.copyfileobj(file.file, buffer)
 	
 	return {'path': path}
+
+
+@router.delete('/delete/{id}')
+def delete_post(id: int, db: Session = Depends(get_db), current_user: UserDisplay = Depends(oath2.get_current_user)):
+	post_obj = db.query(Post).filter(Post.id == id).first()
+	if not post_obj:
+		raise HTTPException(detail='post not found', status_code=status.HTTP_404_NOT_FOUND)
+	if post_obj.user_id != current_user.id:
+		raise HTTPException(detail='you do not have any permission for delete post, because not owner this post',
+		                    status_code=status.HTTP_401_UNAUTHORIZED)
+	
+	db.delete(post_obj)
+	db.commit()
+	return Response(content='post deleted successfully', status_code=status.HTTP_204_NO_CONTENT)

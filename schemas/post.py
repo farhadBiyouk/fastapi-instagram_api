@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel
-from .user import UserDisplayPost
+from .user import UserDisplayPost,UserDisplay
 
 
 class PostCreate(BaseModel):
@@ -17,4 +17,4 @@ class PostDisplay(BaseModel):
 	image_url_type: str
 	caption: str
 	timestamp: datetime
-	user: UserDisplayPost
+	user_id: UserDisplay
