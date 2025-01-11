@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from schemas.post import PostCreate, PostDisplay
+from schemas.user import UserDisplay
 from sqlalchemy.orm.session import Session
 from db.database import get_db
 from db.models import User, Post
 from datetime import datetime
 from typing import List
 from string import ascii_letters
+from auth import oath2
 import shutil
 import random
 
@@ -34,7 +36,7 @@ def create_post(request: PostCreate, db: Session = Depends(get_db)):
 
 
 @router.get('/', response_model=List[PostDisplay])
-def all_post(db: Session = Depends(get_db)):
+def all_post(db: Session = Depends(get_db), current_user: UserDisplay = Depends(oath2.get_current_user)):
 	posts = db.query(Post).all()
 	return posts
 
